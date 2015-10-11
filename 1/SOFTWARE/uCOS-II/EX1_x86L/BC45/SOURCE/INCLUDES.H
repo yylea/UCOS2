@@ -18,7 +18,8 @@
 #include    <dos.h>
 #include    <setjmp.h>
 
-#include    "\software\ucos-ii\ix86l\bc45\os_cpu.h"
+#include    "E:\UCOS2\1\software\ucos-ii\ix86l\bc45\os_cpu.h"
 #include    "os_cfg.h"
-#include    "\software\ucos-ii\source\ucos_ii.h"
-#include    "\software\blocks\pc\bc45\pc.h"
+#include    "E:\UCOS2\1\software\ucos-ii\source\ucos_ii.h"
+#include    "E:\UCOS2\1\software\blocks\pc\bc45\pc.h"
+#include    "dos.h"

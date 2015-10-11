@@ -12,6 +12,15 @@
 
 #include "includes.h"
 
+
+#define MK_FP( seg, ofs ) ( ( void * )\
+                          ( ( ( unsigned long )( seg ) << 16 ) |\
+                          ( unsigned )( ofs ) ) )
+#define FP_SEG(fp)        ( ( unsigned )( ( unsigned long )( fp ) >> 16 ) )
+#define FP_OFF(fp)        ( ( unsigned )( fp ) )
+
+
+
 /*
 *********************************************************************************************************
 *                                               CONSTANTS

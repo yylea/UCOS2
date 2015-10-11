@@ -19,5 +19,5 @@ MD    ..\OBJ
 MD    ..\LST
 CD    ..\WORK
 COPY  ..\TEST\TEST.MAK   TEST.MAK
-C:\BC45\BIN\MAKE -f TEST.MAK
+C:\Borland\BCC55\Bin\MAKE -f TEST.MAK
 CD    ..\TEST

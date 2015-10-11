@@ -15,9 +15,9 @@
 ###############################################################################
 #
 
-BORLAND=C:\BC45
+BORLAND=C:\Borland\BCC55
 
-CC=$(BORLAND)\BIN\BCC
+CC=$(BORLAND)\BIN\bcc32
 ASM=$(BORLAND)\BIN\TASM
 LINK=$(BORLAND)\BIN\TLINK
 TOUCH=$(BORLAND)\BIN\TOUCH
@@ -33,9 +33,9 @@ SOURCE=..\SOURCE
 TARGET=..\TEST
 WORK=..\WORK
 
-OS=\SOFTWARE\uCOS-II\SOURCE
-PC=\SOFTWARE\BLOCKS\PC\BC45
-PORT=\SOFTWARE\uCOS-II\Ix86L\BC45
+OS=E:\UCOS2\1\SOFTWARE\uCOS-II\SOURCE
+PC=E:\UCOS2\1\SOFTWARE\BLOCKS\PC\BC45
+PORT=E:\UCOS2\1\SOFTWARE\uCOS-II\Ix86L\BC45
 
 ###############################################################################
 #                               COMPILER FLAGS
@@ -65,7 +65,8 @@ PORT=\SOFTWARE\uCOS-II\Ix86L\BC45
 ###############################################################################
 #
 
-C_FLAGS=-c -ml -1 -G -O -Ogemvlbpi -Z -d -n..\obj -k- -v -vi- -wpro -I$(BORLAND)\INCLUDE -L$(BORLAND)\LIB
+#C_FLAGS=-c -ml -1 -G -O -Ogemvlbpi -Z -d -n..\obj -k- -v -vi- -wpro -I$(BORLAND)\INCLUDE -L$(BORLAND)\LIB
+C_FLAGS=-c -G -O -Ogemvlbpi -Z -d -n..\obj -k- -v -vi- -wpro -I$(BORLAND)\INCLUDE -L$(BORLAND)\LIB
 
 ###############################################################################
 #                               ASSEMBLER FLAGS
