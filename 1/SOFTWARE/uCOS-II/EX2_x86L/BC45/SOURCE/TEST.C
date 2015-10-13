@@ -18,6 +18,7 @@
 *********************************************************************************************************
 */
 
+//the stack size can be different for each task
 #define          TASK_STK_SIZE     512                /* Size of each task's stacks (# of WORDs)       */
 
 #define          TASK_START_ID       0                /* Application tasks IDs                         */
@@ -90,13 +91,20 @@ void main (void)
 
     PC_DOSSaveReturn();                                    /* Save environment to return to DOS        */
     PC_VectSet(uCOS, OSCtxSw);                             /* Install uC/OS-II's context switch vector */
-
+    //Initialized elapsed time measurement function that is used to
+    //measure the execution time of OSTaskStkChk()
     PC_ElapsedInit();                                      /* Initialized elapsed time measurement     */
 
     ptos        = &TaskStartStk[TASK_STK_SIZE - 1];        /* TaskStart() will use Floating-Point      */
     pbos        = &TaskStartStk[0];
     size        = TASK_STK_SIZE;
+    //invoke the floating point emulation library instead of making use of FPU
+    //check the figure, the stack size for TaskStart() is 624 instead of 1024.
+    //that' because we reserveds the difference for the FPE library
+    //this function also modifies the top of stack pointer
     OSTaskStkInit_FPE_x86(&ptos, &pbos, &size);            
+    //must call the extended version of OSTaskCreate because we modified the stack and
+    //also because we want to check the stack size at run time
     OSTaskCreateExt(TaskStart,
                    (void *)0,
                    ptos,
