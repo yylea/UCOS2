@@ -80,7 +80,9 @@ static  void  TaskStartDisp(void);
 
 void main (void)
 {
+    //pointer to the top of the stack
     OS_STK *ptos;
+    //pointer to the bottom of the stack
     OS_STK *pbos;
     INT32U  size;
 
@@ -101,19 +103,22 @@ void main (void)
     //invoke the floating point emulation library instead of making use of FPU
     //check the figure, the stack size for TaskStart() is 624 instead of 1024.
     //that' because we reserveds the difference for the FPE library
-    //this function also modifies the top of stack pointer
+    //this function also modifies the top and the bottom of stack pointer as well as the size of the stack
     OSTaskStkInit_FPE_x86(&ptos, &pbos, &size);            
     //must call the extended version of OSTaskCreate because we modified the stack and
     //also because we want to check the stack size at run time
     OSTaskCreateExt(TaskStart,
                    (void *)0,
-                   ptos,
+                   ptos,                    //modified top of stack pointer
                    TASK_START_PRIO,
-                   TASK_START_ID,
-                   pbos,
-                   size,
-                   (void *)0,
-                   OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
+                   TASK_START_ID,           //taks ID, can be anything because it's not used
+                   pbos,                    //modified bottom of stack pointer
+                   size,                    //size of the stack
+                   (void *)0,               //task control block(TCB) extenstion pointer, not used, pass NULL
+                   OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR); //a set of options that tells this function
+                                                               //that we are doing stack size checking
+                                                               //and that we want to clear the stack when
+                                                               //the stack is created
 
     OSStart();                                             /* Start multitasking                       */
 }
@@ -141,13 +146,23 @@ void  TaskStart (void *pdata)
     PC_SetTickRate(OS_TICKS_PER_SEC);                      /* Reprogram tick rate                      */
     OS_EXIT_CRITICAL();
 
+    //knows what percent of the CPU utilization
     OSStatInit();                                          /* Initialize uC/OS-II's statistics         */
 
+    //kernel objects "mailbox"
+    //a mailbox allows a task or an ISR to send a pointer to another task
+    //the mailbox only has room for a single pointer
+    //what the pointer points to is application specific and
+    //both the sender and the receiver need to agree about the contents of the message
+    //in this example, task 4 send a message to task 5, and 
+    //task 5 will respong back to task 4 with an acknowledgement message
     AckMbox = OSMboxCreate((void *)0);                     /* Create 2 message mailboxes               */
     TxMbox  = OSMboxCreate((void *)0);
 
+    //creates 6 tasks using OSTaskCreateExt() because need to do stack checking
     TaskStartCreateTasks();                                /* Create all other tasks                   */
 
+    //each task is a inifinite loop
     for (;;) {
         TaskStartDisp();                                   /* Update the display                       */
 
@@ -158,6 +173,9 @@ void  TaskStart (void *pdata)
         }
 
         OSCtxSwCtr = 0;                                    /* Clear context switch counter             */
+
+        //another method other than OSTimeDlyHMSM() to delay the task so that allows other task to run
+        //OSTimeDly is slightly faster than OSTimeDlyHMSM()
         OSTimeDly(OS_TICKS_PER_SEC);                       /* Wait one second                          */
     }
 }
@@ -337,7 +355,15 @@ void  Task1 (void *pdata)
     pdata = pdata;
     for (;;) {
         for (i = 0; i < 7; i++) {
+            //initialize the elapsed time measureemtn function that is used to measure the execution of OSTaskStkChk()
+            //PC_ElapsedStart(); and PC_ElapsedStop(); is a pair
             PC_ElapsedStart();
+            //used to check the stack usage of a task
+            //first parameter is the task priority of the task you want to check
+            //second parameter is a pointer to a data structure OS_STK_DATA that holds information about the task's stack
+            //OS_STK_DATA contains the number of bytes used and the number of bytes free
+            //OSTaskStkChk returns an error code that indicates whether the call was successful
+            //it would be not successful if I had passsed the priority number of a task that didn't exist
             err  = OSTaskStkChk(TASK_START_PRIO + i, &data);
             time = PC_ElapsedStop();
             if (err == OS_NO_ERR) {
@@ -364,6 +390,7 @@ void  Task1 (void *pdata)
 void  Task2 (void *data)
 {
     data = data;
+    //five rotations per second
     for (;;) {
         PC_DispChar(70, 15, '|',  DISP_FGND_YELLOW + DISP_BGND_BLUE);
         OSTimeDly(10);
@@ -390,9 +417,11 @@ void  Task3 (void *data)
 {
     char    dummy[500];
     INT16U  i;
-
+    //2.5 rotations per second
 
     data = data;
+    //task 3 report 502 bytes less than task 2
+    //500 bytes for the array and two bytes for the 16 bit interger
     for (i = 0; i < 499; i++) {        /* Use up the stack with 'junk'                                 */
         dummy[i] = '?';
     }
@@ -428,6 +457,7 @@ void  Task4 (void *data)
     txmsg = 'A';
     for (;;) {
         OSMboxPost(TxMbox, (void *)&txmsg);      /* Send message to Task #5                            */
+        //second parameter 0 is the time out value, 0 means forever. unit is clock ticks
         OSMboxPend(AckMbox, 0, &err);            /* Wait for acknowledgement from Task #5              */
         txmsg++;                                 /* Next message to send                               */
         if (txmsg == 'Z') {
