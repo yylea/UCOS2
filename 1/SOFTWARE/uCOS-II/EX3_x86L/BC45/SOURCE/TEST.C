@@ -45,10 +45,10 @@
 */
 
 typedef struct {
-    char    TaskName[30];
-    INT16U  TaskCtr;
-    INT16U  TaskExecTime;
-    INT32U  TaskTotExecTime;
+    char    TaskName[30];                           //name to a task
+    INT16U  TaskCtr;                                //keep track of how many times a task is executed
+    INT16U  TaskExecTime;                           //how long a task takes to execute
+    INT32U  TaskTotExecTime;                        //totoal execution time
 } TASK_USER_DATA;
 
 /*
@@ -65,9 +65,11 @@ OS_STK          Task3Stk[TASK_STK_SIZE];              /* Task #3    task stack  
 OS_STK          Task4Stk[TASK_STK_SIZE];              /* Task #4    task stack                         */
 OS_STK          Task5Stk[TASK_STK_SIZE];              /* Task #5    task stack                         */
 
-TASK_USER_DATA  TaskUserData[7];
+TASK_USER_DATA  TaskUserData[7];                      //an array to hold each task's info
 
+//like a mailbox except that message queue can hold more pointers
 OS_EVENT       *MsgQueue;                             /* Message queue pointer                         */
+//an array of messages (pointers) to hold the message in the queue
 void           *MsgQueueTbl[20];                      /* Storage for messages                          */
 
 /*
@@ -105,18 +107,21 @@ void  main (void)
 
     PC_VectSet(uCOS, OSCtxSw);                             /* Install uC/OS-II's context switch vector */
 
+    //Initialized elapsed time measurement function that is used to
+    //measure the execution time of OSTaskStkChk()
     PC_ElapsedInit();                                      /* Initialized elapsed time measurement     */
 
     strcpy(TaskUserData[TASK_START_ID].TaskName, "StartTask");
-    OSTaskCreateExt(TaskStart,
-                    (void *)0,
-                    &TaskStartStk[TASK_STK_SIZE - 1],
-                    TASK_START_PRIO,
-                    TASK_START_ID,
-                    &TaskStartStk[0],
-                    TASK_STK_SIZE,
-                    &TaskUserData[TASK_START_ID],
-                    0);
+    OSTaskCreateExt(TaskStart,                             //pointer to task's function
+                    (void *)0,                             //the parameter to the task's function
+                    &TaskStartStk[TASK_STK_SIZE - 1],      //top of the stack
+                    TASK_START_PRIO,                       //priority
+                    TASK_START_ID,                         //task ID
+                    &TaskStartStk[0],                      //bottom of the stack
+                    TASK_STK_SIZE,                         //stack size
+                    &TaskUserData[TASK_START_ID],          //Task Control Block TCB can store a pointer to a user-provided data structure
+                                                           //this allows to extend the functionality of UCOSII
+                    0);                                    //a set of additional options
     OSStart();                                             /* Start multitasking                       */
 }
 
@@ -338,9 +343,10 @@ void  Task1 (void *pdata)
 
     pdata = pdata;
     for (;;) {
-        msg = (char *)OSQPend(MsgQueue, 0, &err);
-        PC_DispStr(70, 13, msg, DISP_FGND_YELLOW + DISP_BGND_BLUE);
-        OSTimeDlyHMSM(0, 0, 0, 100);
+        //returns the pointer to the message, MsgQueue is the queue being created using MsgQueue = OSQCreate(&MsgQueueTbl[0], MSG_QUEUE_SIZE); 
+        msg = (char *)OSQPend(MsgQueue, 0, &err);                   //wait forever for a message to arrive
+        PC_DispStr(70, 13, msg, DISP_FGND_YELLOW + DISP_BGND_BLUE); //display the message when it arrives
+        OSTimeDlyHMSM(0, 0, 0, 100);                                //delayed for 100ms to allow you to see the message received
     }
 }
 
@@ -358,8 +364,8 @@ void  Task2 (void *pdata)
     pdata = pdata;
     strcpy(&msg[0], "Task 2");
     for (;;) {
-        OSQPost(MsgQueue, (void *)&msg[0]);
-        OSTimeDlyHMSM(0, 0, 0, 500);
+        OSQPost(MsgQueue, (void *)&msg[0]);                 //post the message string "Task 2" to the queue
+        OSTimeDlyHMSM(0, 0, 0, 500);                        //waits for half a second before sending another message
     }
 }
 /*$PAGE*/
@@ -411,7 +417,7 @@ void  Task5 (void *pdata)
 {
     pdata = pdata;
     for (;;) {
-        OSTimeDlyHMSM(0, 0, 0, 100);
+        OSTimeDlyHMSM(0, 0, 0, 100);            //task 5 does nothing except delaying itself for 100ms
     }
 }
 
@@ -429,7 +435,7 @@ void  TaskClk (void *pdata)
     pdata = pdata;
     for (;;) {
         PC_GetDateTime(s);
-        PC_DispStr(60, 23, s, DISP_FGND_YELLOW + DISP_BGND_BLUE);
+        PC_DispStr(60, 23, s, DISP_FGND_YELLOW + DISP_BGND_BLUE); //display current date and time once a 500ms
         OSTimeDlyHMSM(0, 0, 0, 500);
     }
 }
@@ -454,6 +460,12 @@ void  DispTaskStat (INT8U id)
     PC_DispStr(0, id + 11, s, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
 }
 
+
+
+//hooks functions provide a easy way to add functionality to UCOSII
+//hooks are usually found in OS_CPU_C.C file
+//but if define OS_CPU_HOOKS_EN to 0, you can declare the hook function in a differnt file
+//OS_CPU_HOOKS_EN can be found in OS_CFG.H
 /*
 *********************************************************************************************************
 *                                       OS INITIALIZATION HOOK
@@ -541,6 +553,10 @@ void  OSTaskStatHook (void)
 *                                           TASK SWITCH HOOK
 *********************************************************************************************************
 */
+//allows us to measure the execution time of each task,
+//keeps track of how often each task executes
+//and accumulates total execution times of each task
+//****OSTaskSwHook() is called when UCOSII switches from a low priority task to a higher priority task
 void  OSTaskSwHook (void)
 {
     INT16U           time;
