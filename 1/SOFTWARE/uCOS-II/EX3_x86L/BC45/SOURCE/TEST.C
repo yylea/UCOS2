@@ -521,6 +521,8 @@ void  OSTaskIdleHook (void)
 *********************************************************************************************************
 */
 
+//when OS_TASK_STAT_EN is enabled in OS_CFG.H, the statistic task OSTaskStat() calls the user-definable function
+//OSTaskStatHook, this function is called every second
 void  OSTaskStatHook (void)
 {
     char    s[80];
@@ -531,6 +533,7 @@ void  OSTaskStatHook (void)
 
     total = 0L;                                          /* Totalize TOT. EXEC. TIME for each task */
     for (i = 0; i < 7; i++) {
+        //total exec time of all tasks
         total += TaskUserData[i].TaskTotExecTime;
         DispTaskStat(i);                                 /* Display task data                      */
     }
@@ -565,8 +568,13 @@ void  OSTaskSwHook (void)
 
     time  = PC_ElapsedStop();                    /* This task is done                                  */
     PC_ElapsedStart();                           /* Start for next task                                */
+    //global pointer OSTCBCur points to the TCB of the current task
+    //that's the last second paramter in OSTaskCreateExt()
     puser = OSTCBCur->OSTCBExtPtr;               /* Point to used data                                 */
+    //check if the pointer is not NULL
+    //the two default tasks: idle task and statistic task do not contain a TCB externsion pointer
     if (puser != (TASK_USER_DATA *)0) {
+        //calculate how many times this task being called
         puser->TaskCtr++;                        /* Increment task counter                             */
         puser->TaskExecTime     = time;          /* Update the task's execution time                   */
         puser->TaskTotExecTime += time;          /* Update the task's total execution time             */
