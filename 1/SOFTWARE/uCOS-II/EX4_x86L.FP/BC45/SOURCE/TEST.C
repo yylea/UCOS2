@@ -215,6 +215,19 @@ static  void  TaskStartCreateTasks (void)
     for (i = 0; i < N_TASKS; i++) {                        /* Create N_TASKS identical tasks           */
         prio        = i + 1;
         TaskData[i] = prio;
+        //1.pointer to task function
+        //2.parameter to the task function, point to the task prioity
+        //3.top of the task's stack
+        //4.priority
+        //5.task ID, why all 0?
+        //6.bottom of stack
+        //7.stack size
+        //8.TCB
+        //9.a set of options, each of the tasks are doing floating point calculations,
+        //  and we want to tell the port to save the floating point registers during a context switch
+        //  it is a good idea to always have OS_TASK_OPT_SAVE_FP when create task with OSTaskCreateExt
+        //  if the port supports floating point hardware, UCOSII can take hte necessary steps to save and
+        //  retrive the floating point registers during a context switch
         OSTaskCreateExt(Task,
                         (void *)&TaskData[i],
                         &TaskStk[i][TASK_STK_SIZE - 1],
@@ -244,8 +257,11 @@ void  Task (void *pdata)
 
 
     ypos  = *(INT8U *)pdata + 7;
+    //pdata points to an 8 bit integer containing the task priority
+    //to make each task calculate different angles, offset each task by 36 degrees
     angle = (FP32)(*(INT8U *)pdata) * (FP32)36.0;
     for (;;) {
+        //sin() and cos() assumes radians instead of degrees, and thus the conversion
         radians = (FP32)2.0 * (FP32)3.141592 * angle / (FP32)360.0;
         x       = cos(radians);
         y       = sin(radians);
