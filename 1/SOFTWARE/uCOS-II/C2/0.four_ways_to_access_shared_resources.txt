@@ -1,0 +1,4 @@
+1.disabling interrupts;
+2.performing test-and-set operations;
+3. disabling scheduling;
+4.using semaphores;
