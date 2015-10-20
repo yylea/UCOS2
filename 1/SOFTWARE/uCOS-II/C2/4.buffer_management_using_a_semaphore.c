@@ -11,3 +11,14 @@ BUF *BufReq(void)
 	return (ptr);
 	*/
 }
+
+void BufRel(BUF *ptr)
+{
+	/*
+	Disable interrupts;
+	ptr->BufNext = BufFreeList;
+	BufFreeList = ptr;
+	Enable interrupts;
+	Release semaphore;
+	*/
+}
