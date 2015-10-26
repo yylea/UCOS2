@@ -55,6 +55,8 @@ typedef unsigned short OS_CPU_SR;                /* Define size of CPU status re
 *
 * Method #1:  Disable/Enable interrupts using simple instructions.  After critical section, interrupts
 *             will be enabled even if they were disabled before entering the critical section.
+*             //if you call a UCOSII function with interrupts disabled, on return from a UCOSII service,
+*             //interrupts are enabled!!
 *
 * Method #2:  Disable/Enable interrupts by preserving the state of interrupts.  In other words, if 
 *             interrupts were disabled before entering the critical section, they will be disabled when
@@ -75,13 +77,30 @@ typedef unsigned short OS_CPU_SR;                /* Define size of CPU status re
 #endif
 
 #if      OS_CRITICAL_METHOD == 2
+//PUSHF decrements the stack pointer by 2 and copies the FLAGS register to the new top of stack;
+//CLI: Clear Interrupt Flag CLI clears the interrupt flag if the current privilege level is at least as privileged as IOPL.
 #define  OS_ENTER_CRITICAL()  asm {PUSHF; CLI}            /* Disable interrupts                        */
+//POPF/POPFD pops the word or doubleword on the top of the stack and stores the value in the flags register. 
 #define  OS_EXIT_CRITICAL()   asm  POPF                   /* Enable  interrupts                        */
+
+//pseudocode from the book, p67
+/*
+#define OS_ENTER_CRITICAL()	\
+//pushes the processor status word(PSW) onto the stack
+asm(" PUSH PSW")		\
+// DI stands for disable interrupt
+asm(" DI")
+
+#define OS_EXIT_CRITICAL()	\
+asm(" POP PSW")
+*/
 #endif
 
 #if      OS_CRITICAL_METHOD == 3
 #define  OS_ENTER_CRITICAL()  (cpu_sr = OSCPUSaveSR())    /* Disable interrupts                        */
 #define  OS_EXIT_CRITICAL()   (OSCPURestoreSR(cpu_sr))    /* Enable  interrupts                        */
+
+
 #endif
 
 /*

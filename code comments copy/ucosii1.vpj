@@ -1,0 +1,236 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+    Version="10.0"
+    VendorName="SlickEdit"
+    TemplateName="Other C/C++"
+    WorkingDir=".">
+    <Config
+        Name="Debug"
+        Type="cpp"
+        DebugCallbackName="gdb"
+        OutputFile="%bducosii1"
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                CaptureOutputWith="ProcessBuffer"
+                OutputExts="*.o"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='cc -c -g %i %defd -o "%bd%n.o" "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link">
+                <Exec CmdLine='cc -g -o "%o" %f %libs'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='vsdebugio -prog "%o"'/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%o"'/>
+            </Target>
+        </Menu>
+    </Config>
+    <Config
+        Name="Release"
+        Type="cpp"
+        DebugCallbackName="gdb"
+        OutputFile="%bducosii1"
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveCurrent"
+                OutputExts="*.o"
+                RunFromDir="%rw">
+                <Exec CmdLine='cc -c -O %i %defd -o "%bd%n.o" "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link">
+                <Exec CmdLine='cc -O -o "%o" %f %libs'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" build "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%(VSLICKBIN1)vsbuild" rebuild "%w" "%r"'/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='vsdebugio -prog "%o"'/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                SaveOption="SaveNone"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                RunFromDir="%rw">
+                <Exec CmdLine='"%o"'/>
+            </Target>
+        </Menu>
+    </Config>
+    <Rules Name="Compile">
+        <Rule
+            InputExts="*.s"
+            OutputExts="*.o"
+            LinkObject="1">
+            <Exec CmdLine='as -o "%bd%n.o" "%f"'/>
+        </Rule>
+    </Rules>
+    <Files>
+        <Folder
+            Name="Source Files"
+            Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d;*.m;*.mm;*.go">
+            <F N="SOFTWARE/uCOS-II/C2/1.disabling_and_enabling_interrupts.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/1.using_UCOSII_macros_to_disable_enable_interrupts.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/2.using_test_and_set_to_access_a_resource.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/3.disabling_and_enaling_scheduling.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/4.accessing_shared_data_by_obtaining_a_semaphore.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/4.buffer_management_using_a_semaphore.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/4.encapsulating_a_semaphore.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/bilateral rendezvous.c"/>
+            <F N="SOFTWARE/uCOS-II/C2/non-reentrant_function.c"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_CORE.C"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L-FP/BC45/OS_CPU_A.ASM"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L/BC45/OS_CPU_A.ASM"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L-FP/BC45/OS_CPU_C.C"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L/BC45/OS_CPU_C.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_FLAG.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_MBOX.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_MEM.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_MUTEX.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_Q.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_SEM.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_TASK.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/OS_TIME.C"/>
+            <F N="SOFTWARE/BLOCKS/PC/BC45/PC.C"/>
+            <F N="SOFTWARE/uCOS-II/C2/reentrant_function.c"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/SOURCE/TEST.C"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/SOURCE/TEST.C"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/SOURCE/TEST.C"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/SOURCE/TEST.C"/>
+            <F N="SOFTWARE/TO/SOURCE/TO.C"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/uCOS_II.C"/>
+        </Folder>
+        <Folder
+            Name="Header Files"
+            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/SOURCE/dos.h"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L/BC45/dos.h"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/SOURCE/INCLUDES.H"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/SOURCE/INCLUDES.H"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/SOURCE/INCLUDES.H"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/SOURCE/INCLUDES.H"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/SOURCE/OS_CFG.H"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/SOURCE/OS_CFG.H"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/SOURCE/OS_CFG.H"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/SOURCE/OS_CFG.H"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L-FP/BC45/OS_CPU.H"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L/BC45/OS_CPU.H"/>
+            <F N="SOFTWARE/BLOCKS/PC/BC45/PC.H"/>
+            <F N="SOFTWARE/uCOS-II/SOURCE/uCOS_II.H"/>
+        </Folder>
+        <Folder
+            Name="Resource Files"
+            Filters="*.ico;*.cur;*.dlg"/>
+        <Folder
+            Name="Bitmaps"
+            Filters="*.bmp"/>
+        <Folder
+            Name="Other Files"
+            Filters="">
+            <F N="SOFTWARE/uCOS-II/C2/0.four_ways_to_access_shared_resources.txt"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L-FP/DOC/80x86L-FP-ROM-RAM.xls"/>
+            <F N="SOFTWARE/uCOS-II/Ix86L/DOC/80x86L-ROM-RAM.xls"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/TEST/MAKETEST.BAT"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/TEST/MAKETEST.BAT"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/TEST/MAKETEST.BAT"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/TEST/MAKETEST.BAT"/>
+            <F N="SOFTWARE/uCOS-II/DOC/NewV252.PDF"/>
+            <F N="SOFTWARE/uCOS-II/DOC/QuickRefChartV252-Color.PDF"/>
+            <F N="SOFTWARE/uCOS-II/DOC/README.TXT"/>
+            <F N="SOFTWARE/uCOS-II/DOC/RelV252.PDF"/>
+            <F N="SOFTWARE/uCOS-II/DOC/TaskAssignmentWorksheet.PDF"/>
+            <F N="SOFTWARE/uCOS-II/DOC/TaskAssignmentWorksheet.XLS"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/TEST/TEST.EXE"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/TEST/TEST.EXE"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/TEST/TEST.EXE"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/TEST/TEST.EXE"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/SOURCE/TEST.LNK"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/SOURCE/TEST.LNK"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/SOURCE/TEST.LNK"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/SOURCE/TEST.LNK"/>
+            <F
+                N="SOFTWARE/uCOS-II/EX1_x86L/BC45/TEST/TEST.MAK"
+                Type="Makefile"/>
+            <F
+                N="SOFTWARE/uCOS-II/EX2_x86L/BC45/TEST/TEST.MAK"
+                Type="Makefile"/>
+            <F
+                N="SOFTWARE/uCOS-II/EX3_x86L/BC45/TEST/TEST.MAK"
+                Type="Makefile"/>
+            <F
+                N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/TEST/TEST.MAK"
+                Type="Makefile"/>
+            <F N="SOFTWARE/uCOS-II/EX1_x86L/BC45/TEST/TEST.MAP"/>
+            <F N="SOFTWARE/uCOS-II/EX2_x86L/BC45/TEST/TEST.MAP"/>
+            <F N="SOFTWARE/uCOS-II/EX3_x86L/BC45/TEST/TEST.MAP"/>
+            <F N="SOFTWARE/uCOS-II/EX4_x86L.FP/BC45/TEST/TEST.MAP"/>
+            <F N="SOFTWARE/TO/EXE/TO.EXE"/>
+            <F N="SOFTWARE/TO/EXE/TO.TBL"/>
+            <F N="ucosii1.vpj"/>
+            <F N="ucosii1.vpw"/>
+            <F N="ucosii1.vpwhist"/>
+            <F N="ucosii1.vtg"/>
+        </Folder>
+    </Files>
+</Project>

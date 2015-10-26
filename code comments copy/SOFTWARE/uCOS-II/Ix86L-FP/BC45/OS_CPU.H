@@ -50,6 +50,7 @@ typedef unsigned int   OS_CPU_SR;                /* The CPU Status Word is 16-bi
 *
 * Method #1:  Disable/Enable interrupts using simple instructions.  After critical section, interrupts
 *             will be enabled even if they were disabled before entering the critical section.
+
 *
 * Method #2:  Disable/Enable interrupts by preserving the state of interrupts.  In other words, if 
 *             interrupts were disabled before entering the critical section, they will be disabled when
@@ -63,10 +64,6 @@ typedef unsigned int   OS_CPU_SR;                /* The CPU Status Word is 16-bi
 *********************************************************************************************************
 */
 #define  OS_CRITICAL_METHOD    2
-
-
-#define  OS_ENTER_CRITICAL()  asm {PUSHF; CLI}            /* Disable interrupts                        */
-#define  OS_EXIT_CRITICAL()   asm  POPF                   /* Enable  interrupts                        */
 
 /*
 *********************************************************************************************************
