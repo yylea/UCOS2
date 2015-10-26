@@ -368,16 +368,44 @@ typedef struct {
 */
 
 typedef struct os_tcb {
+    //OSTCBStkPtr should be the only field in OS_TCB data structure that
+    //is accessed from assembly language ccode(from the context-switching code)
+    //typedef unsigned int   OS_STK;  //16 bit wide
     OS_STK        *OSTCBStkPtr;        /* Pointer to current top of stack                              */
 
+    //is used only by OSTaskCreateExt(), so you need to set OS_TASK_CREATE_EXT_EN
+    //in OS_CFG.H to 1 to enable this field
 #if OS_TASK_CREATE_EXT_EN > 0
+    //after it's enabled, you can use .OSTCBExtPtr to point to a data structure that
+    // contains the name of the task, or to track then umber of times a task has been switched-in (see ex3)
     void          *OSTCBExtPtr;        /* Pointer to user definable data for TCB extension             */
+    //if processor's stack grows from high to low, it points to the lowest valid mempory location 
+    //for the stack. It used by OSTaskStkChk() to check the size of a task's tack at run time
+    //which allows you to determine the amoutn of free stack space available for each stack.
+    //stack checking can only occur if you create a task with OSTaskCreateExt, so that you need
+    //OS_TASK_CREATE_EXT_EN to 1 to enable this field
     OS_STK        *OSTCBStkBottom;     /* Pointer to bottom of stack                                   */
+
     INT32U         OSTCBStkSize;       /* Size of task stack (in number of stack elements)             */
+
+    //currently only three options avaiable, see uCOS_II.H
+    //OS_TASK_OPT_STK_CHK, OS_TASK_OPT_STK_CLR, OS_TASK_OPT_SAVE_FP
+        //OS_TASK_OPT_STK_CHK is used to specify to OSTaskCreateExt() that stck checking is
+        //enabled for the task being craeted.
+        //stack checking is performed by the application code by calling OSTaskStkChk()
+        //OS_TASK_OPT_STK_CLR indicates that the stack needs to be cleared
+        // (UCOSII writes) zeros in every location of the stack when the task is created
+        //the stack only needs to be cleared if you intend to do stack checking
+        //OS_TASK_OPT_SAVE_FP tells OSTaskCreateExt() that the task will be doing floating-point computing
+        //if the processor provides hardware assisted FPU, the FP registers need to be saved for the task
+        //being created and during a context switch
     INT16U         OSTCBOpt;           /* Task options as passed by OSTaskCreateExt()                  */
+    //this field is not currently used
     INT16U         OSTCBId;            /* Task ID (0..65535)                                           */
 #endif
-
+    //double linked list
+    //OSTimeTick() uses the forward link (pointed to by OSTCBNext) chain to update
+    //the OSTCBDly field for each task
     struct os_tcb *OSTCBNext;          /* Pointer to next     TCB in the TCB list                      */
     struct os_tcb *OSTCBPrev;          /* Pointer to previous TCB in the TCB list                      */
 
@@ -385,12 +413,14 @@ typedef struct os_tcb {
     OS_EVENT      *OSTCBEventPtr;      /* Pointer to event control block                               */
 #endif
 
+    //pointer to a mesage that is sent to a task
 #if ((OS_Q_EN > 0) && (OS_MAX_QS > 0)) || (OS_MBOX_EN > 0)
     void          *OSTCBMsg;           /* Message received from OSMboxPost() or OSQPost()              */
 #endif
 
 #if (OS_VERSION >= 251) && (OS_FLAG_EN > 0) && (OS_MAX_FLAGS > 0)
-#if OS_TASK_DEL_EN > 0
+#if OS_TASK_DEL_EN > 0  //is OS_CFG.H
+//this field is used only by OSTaskDel() when we delete a task that waits on an event flag group
     OS_FLAG_NODE  *OSTCBFlagNode;      /* Pointer to event flag node                                   */
 #endif    
     OS_FLAGS       OSTCBFlagsRdy;      /* Event flags that made task ready to run                      */
@@ -400,6 +430,13 @@ typedef struct os_tcb {
     INT8U          OSTCBStat;          /* Task status                                                  */
     INT8U          OSTCBPrio;          /* Task priority (0 == highest, 63 == lowest)                   */
 
+    //are used to accelerate the process of making a task ready to run or
+    //to make a task wait for an event (to avoid computing hese values at run time)
+    //the values for these fields are computed when the task is created or when the task's priority is changed
+    //OSTCBX = priority & 0x07;
+    //OSTCBY = priority >> 3
+    //OSTCBBitX = OSMapTbl[priority & 0x07]
+    //OSTCBBitY = OSMapTbl[priority >> 3]
     INT8U          OSTCBX;             /* Bit position in group  corresponding to task priority (0..7) */
     INT8U          OSTCBY;             /* Index into ready table corresponding to task priority        */
     INT8U          OSTCBBitX;          /* Bit mask to access bit position in ready table               */
