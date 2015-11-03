@@ -35,6 +35,8 @@
 
 #define  OS_PRIO_SELF           0xFF                    /* Indicate SELF priority                      */
 
+//OS_N_SYS_TASKS is for system internel use
+//1 idle task or 1 idle task + 1 statistic task
 #if OS_TASK_STAT_EN > 0
 #define  OS_N_SYS_TASKS            2                    /* Number of system tasks                      */
 #else
@@ -495,10 +497,17 @@ OS_EXT  OS_STK            OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE];      /* Idle tas
 
 
 OS_EXT  OS_TCB           *OSTCBCur;                        /* Pointer to currently running TCB         */
+
+//when UCOS is initialized, all OS_TCBs in the table are linked in a singly linked list
+//When a task is created, the OS_TCB to which OSTCBFreeList points is assigned to the task
+//and OSTCBFreeList is adjusted to point to the next OS_TCB in the chain
+//when a task is deleted, its OS_TCB is returned to the list of free OS_TCBs
+
 OS_EXT  OS_TCB           *OSTCBFreeList;                   /* Pointer to list of free TCBs             */
 OS_EXT  OS_TCB           *OSTCBHighRdy;                    /* Pointer to highest priority TCB R-to-R   */
 OS_EXT  OS_TCB           *OSTCBList;                       /* Pointer to doubly linked list of TCBs    */
 OS_EXT  OS_TCB           *OSTCBPrioTbl[OS_LOWEST_PRIO + 1];/* Table of pointers to created TCBs        */
+//all TCBs are place in OSTCBTbl[]
 OS_EXT  OS_TCB            OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];   /* Table of TCBs                  */
 
 #if (OS_MEM_EN > 0) && (OS_MAX_MEM_PART > 0)

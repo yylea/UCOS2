@@ -1042,14 +1042,19 @@ INT8U  OS_TCBInit (INT8U prio, OS_STK *ptos, OS_STK *pbos, INT16U id, INT32U stk
 
     OS_ENTER_CRITICAL();
     ptcb = OSTCBFreeList;                                  /* Get a free TCB from the free TCB list    */
-    if (ptcb != (OS_TCB *)0) {
+    if (ptcb != (OS_TCB *)0) {                             //if the poll contains a free OS_TCB, it is initialized
         OSTCBFreeList        = ptcb->OSTCBNext;            /* Update pointer to free TCB list          */
+
+        //after OS_TCB is allocated, OS_TCBInit() can re-enable interrupts because at this point
+        //the creator of the task owns the OS_TCB and it cannot be corrupted by another concurrent task creation
+        //OS_TCBInit() can thus proceed to initialize some of the OS_TCB fields with interrupts enabled
         OS_EXIT_CRITICAL();
         ptcb->OSTCBStkPtr    = ptos;                       /* Load Stack pointer in TCB                */
         ptcb->OSTCBPrio      = (INT8U)prio;                /* Load task priority into TCB              */
         ptcb->OSTCBStat      = OS_STAT_RDY;                /* Task is ready to run                     */
         ptcb->OSTCBDly       = 0;                          /* Task is not delayed                      */
 
+        //extra field used in OSTaskCreateExt()
 #if OS_TASK_CREATE_EXT_EN > 0
         ptcb->OSTCBExtPtr    = pext;                       /* Store pointer to TCB extension           */
         ptcb->OSTCBStkSize   = stk_size;                   /* Store stack size                         */
@@ -1073,10 +1078,14 @@ INT8U  OS_TCBInit (INT8U prio, OS_STK *ptos, OS_STK *pbos, INT16U id, INT32U stk
         ptcb->OSTCBX         = prio & 0x07;
         ptcb->OSTCBBitX      = OSMapTbl[ptcb->OSTCBX];
 
+        //used by semaphores, mutexes, message mailboxes and message queue
+        //if not use, then .OSTCBEventPtr field is not present
 #if OS_EVENT_EN > 0
         ptcb->OSTCBEventPtr  = (OS_EVENT *)0;              /* Task is not pending on an event          */
 #endif
 
+        //if you enabled event flags(OS_FLAG_EN to 1 in OS_CFG.H), then the pointer to an event flag note is intitialized to
+        //point to nothing because the task is not waiting for an event flag, it's only being created
 #if (OS_VERSION >= 251) && (OS_FLAG_EN > 0) && (OS_MAX_FLAGS > 0) && (OS_TASK_DEL_EN > 0)
         ptcb->OSTCBFlagNode  = (OS_FLAG_NODE *)0;          /* Task is not pending on an event flag     */
 #endif
@@ -1085,12 +1094,21 @@ INT8U  OS_TCBInit (INT8U prio, OS_STK *ptos, OS_STK *pbos, INT16U id, INT32U stk
         ptcb->OSTCBMsg       = (void *)0;                  /* No message received                      */
 #endif
 
+        //this function allows you to add extensions to the OS_TCB
+        //This allows you to store the contents of floating-point
+        //registers, MMU registers or anything else you could find useful during a context switch.
+        //However, you typically store this additional information in mempry that is allocated by your application
+        //note that the interrupt is enabled when OS_TCBInit() calls OSTCBInitHook()
 #if OS_VERSION >= 204
         OSTCBInitHook(ptcb);
 #endif
 
+        //OS_TCBInit() then calls OSTaskCreateHook(), which is a user specified function that
+        //allows you to extend the functionality of OSTaskCreate() or OSTaskCreateExt()
         OSTaskCreateHook(ptcb);                            /* Call user defined hook                   */
         
+        //disables interrupts when it needs to insert the OS_TCB into the doubly linked list of tasks that have been created.
+        //the list starts at OSTCBList, and the OS_TCB of a new task is always inserted at the beginning of the list
         OS_ENTER_CRITICAL();
         OSTCBPrioTbl[prio] = ptcb;
         ptcb->OSTCBNext    = OSTCBList;                    /* Link into TCB chain                      */
@@ -1105,5 +1123,8 @@ INT8U  OS_TCBInit (INT8U prio, OS_STK *ptos, OS_STK *pbos, INT16U id, INT32U stk
         return (OS_NO_ERR);
     }
     OS_EXIT_CRITICAL();
+
+    //the task is ready to run and OS_TCBInit() returns to its caller OSTaskCreate() or OSTaskCreateExt()
+    //with a code indicating that an OS_TCB has been allocated and initalized
     return (OS_NO_MORE_TCB);
 }

@@ -27,6 +27,8 @@
                                        /* ... MUST be > 0                                              */
 #define OS_MAX_QS                 2    /* Max. number of queue control blocks in your application ...  */
                                        /* ... MUST be > 0                                              */
+//this also determines the number of OS_TCBs (int uCOS_II.H)
+//you can reduce RAM space
 #define OS_MAX_TASKS             11    /* Max. number of tasks in your application ...                 */
                                        /* ... MUST be >= 2                                             */
 
