@@ -46,6 +46,7 @@
 #define  OS_STAT_PRIO       (OS_LOWEST_PRIO - 1)        /* Statistic task priority                     */
 #define  OS_IDLE_PRIO       (OS_LOWEST_PRIO)            /* IDLE      task priority                     */
 
+//OS_LOWEST_PRIO is application dependent
 #define  OS_EVENT_TBL_SIZE ((OS_LOWEST_PRIO) / 8 + 1)   /* Size of event table                         */
 #define  OS_RDY_TBL_SIZE   ((OS_LOWEST_PRIO) / 8 + 1)   /* Size of ready table                         */
 
@@ -484,6 +485,16 @@ OS_EXT  INT8U             OSLockNesting;            /* Multitasking lock nesting
 OS_EXT  INT8U             OSPrioCur;                /* Priority of current task                        */
 OS_EXT  INT8U             OSPrioHighRdy;            /* Priority of highest priority task               */
 
+//8 bits in OSRdyGrp, each bit represents a group of tasks,
+//in the 8 bits in each OSRdyTbl[i]
+//bit 0 in OSRdyGrp is 1 when any bit in OSRdyTbl[0] is 1
+//bit 1 in OSRdyGrp is 1 when any bit in OSRdyTbl[1] is 1
+//bit 2 in OSRdyGrp is 1 when any bit in OSRdyTbl[2] is 1
+//bit 3 in OSRdyGrp is 1 when any bit in OSRdyTbl[3] is 1
+//....
+//bit 7 in OSRdyGrp is 1 when any bit in OSRdyTbl[7] is 1
+
+//the size of OSRdyTbl depends on OS_LOWEST_PRIO (application dependent)
 OS_EXT  INT8U             OSRdyGrp;                        /* Ready list group                         */
 OS_EXT  INT8U             OSRdyTbl[OS_RDY_TBL_SIZE];       /* Table of tasks which are ready to run    */
 
@@ -883,6 +894,9 @@ void          OSTimeTickHook(void);
 */
 
 #ifndef OS_ISR_PROTO_EXT
+//refer to Chapter 13, porting UCOSII for details of OSCtxSw
+//OSCtxSw expects to have OSTCBHighRdy point to the OS_TCB of the task to be switched in and 
+//to have OSTCBCur point to the OS_TCB of the task being suspended
 void          OSCtxSw(void);
 void          OSTickISR(void);
 #endif

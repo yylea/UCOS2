@@ -113,6 +113,7 @@ asm(" POP PSW")
 
 #define  uCOS                 0x80                    /* Interrupt vector # used for context switch    */
 
+//the ISR or the  trap handler must vector to the assembly landuage function OSCtxSw()
 #define  OS_TASK_SW()         asm  INT   uCOS
 
 /*

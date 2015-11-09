@@ -25,8 +25,42 @@
 *       Indexed value corresponds to bit mask
 *********************************************************************************************************
 */
+//this system is so tricky!!!!
 
+//Figure 3.4 and table 3.2
 INT8U  const  OSMapTbl[]   = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+/*
+OSMapTbl = {0000001,    //0-7, OSRdyGrp = 00000001 is a group of prio 0-7
+            0000010,    //8-15 ,OSRdyGrp = 00000010 is a group of prio 8-15
+            0000100,    //16-23
+            0001000,    //24-31
+            0010000,    //32-39
+            0100000,    //40-47
+            1000000     //56-63
+            };
+ 
+//OSRdyTbl[]'s X axis
+//the lower three bits of the task's priority are used to determine the bit position in OSRdyTbl[]
+//indexed with [prio & 0x07] 
+ 
+//OSRdyTbl[]'s Y axis 
+//the next three most significant bits are used to determine the index into OSRdyTbl[]
+//indexed with [prio >> 3], returns a bit mask to OSRdyGrp (index into OSRdyTbl[])
+ 
+ 
+listing 3.7 making a task ready to run 
+OSRdyGrp    |=  OSMapTbl[prio >> 3] 
+OSRdyTbl[prio >> 3] |= OSMapTbl[prio & 0x07] 
+//(the bit in OSRdyGrp) == proi >> 3, which is also the index (Y axis) of  OSRdyTbl 
+ 
+listing 3.8 removing a task from the ready list 
+//this code clears the ready bit of the task in OSRdyTbl[] and clears the bit 
+//in OSRdyGrp only if all tasks in a group are not ready to run; 
+//that is, all bits in OSRdyTbl[prio >> 3] are 0  
+if((OSRdyTbl[prio >> 3] &= ~OSMapTbl[prio & 0x07]) == 0) 
+    OSRdyGrp &= ~OSMapTbl[prio >> 3] 
+ 
+*/
 
 /*
 *********************************************************************************************************
@@ -37,6 +71,8 @@ INT8U  const  OSMapTbl[]   = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 *********************************************************************************************************
 */
 
+//how this table is created?
+//don't understand yet
 INT8U  const  OSUnMapTbl[] = {
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,       /* 0x00 to 0x0F                             */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,       /* 0x10 to 0x1F                             */
@@ -217,7 +253,7 @@ void  OSSchedLock (void)
     OS_CPU_SR  cpu_sr;
 #endif    
     
-    
+    //if only makes sense to lock the scheuler if multitasking has started(OSStart() was called)
     if (OSRunning == TRUE) {                     /* Make sure multitasking is running                  */
         OS_ENTER_CRITICAL();
         if (OSLockNesting < 255) {               /* Prevent OSLockNesting from wrapping back to 0      */
@@ -225,6 +261,13 @@ void  OSSchedLock (void)
         }
         OS_EXIT_CRITICAL();
     }
+    //after calling OSSchedLock(), you application must not make any system calls that suspend execution of the current task
+    //that is , your application cnanot call OSFlagPend(), OSMboxPend(), OSMutexPend(),OSQPend(), OSSemPend(),
+    //OSTaskSuspend(OS_PRIO_SELF), OSTimeDly(), OSTimeDlyHMSM() until OSLockNesting returns to 0 because
+    //this function prevents other tasks from running and thus your system will lock up.
+    //you might want to disable the scheduler when a low-priority task needs to post messages to
+    //multiple mailboes, queueu, or semaphores and you don't want a higher priority task to take control until all
+    // mailboxes, queues, and semaphore have been posted to (Chapter 6 event control blocks)
 }
 #endif    
 
@@ -251,11 +294,12 @@ void  OSSchedUnlock (void)
     OS_CPU_SR  cpu_sr;
 #endif    
     
-    
+    //if only makes sense to unlock the scheuler if multitasking has started(OSStart() was called)
     if (OSRunning == TRUE) {                                   /* Make sure multitasking is running    */
         OS_ENTER_CRITICAL();
         if (OSLockNesting > 0) {                               /* Do not decrement if already 0        */
             OSLockNesting--;                                   /* Decrement lock nesting level         */
+            //only want to allow the scheduler to execute when all nesting functions are complete
             if ((OSLockNesting == 0) && (OSIntNesting == 0)) { /* See if sched. enabled and not an ISR */
                 OS_EXIT_CRITICAL();
                 OS_Sched();                                    /* See if a HPT is ready                */
@@ -863,6 +907,7 @@ static  void  OS_InitTCBList (void)
 *
 * Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
 *              2) Rescheduling is prevented when the scheduler is locked (see OS_SchedLock())
+*              //task scheduing tim is constant irrepective of the number of task created in an application
 *********************************************************************************************************
 */
 
@@ -875,13 +920,40 @@ void  OS_Sched (void)
 
 
     OS_ENTER_CRITICAL();
+    //exsits if called from an ISR (OSIntNesting > 0) or scheduling has been disabled becasue
+    //your application called OSSchedLock() at least once (OSLockNesting > 0)
     if ((OSIntNesting == 0) && (OSLockNesting == 0)) { /* Sched. only if all ISRs done & not locked    */
+        //determines the highest priority task that is ready to run
         y             = OSUnMapTbl[OSRdyGrp];          /* Get pointer to HPT ready to run              */
         OSPrioHighRdy = (INT8U)((y << 3) + OSUnMapTbl[OSRdyTbl[y]]);
+        //check if not the current prio task to avoid unnecessary context switch
         if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy     */
+            //to do a context switch, OSTCBHighRdy must points to the OS_TCB of the highest priority task
+            //which is done by indexing into OSTCBPrioTbl[]
             OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
             OSCtxSwCtr++;                              /* Increment context switch counter             */
+            //to do the actual context switch
+            //to switch context, you implement OS_TASK_SW() so that you simulatie an interrupt
             OS_TASK_SW();                              /* Perform a context switch                     */
+            /*
+            //Listing 3.11 context-swtich pseudocode 
+             
+            void OSCtxSw(void) 
+            { 
+                //save old
+                PUSH R1,R2,R3 and R4 onto the current stacks;   F3.6(2)
+                OSTCBCur->OSTCBStkPtr  = SP;                    F3.6(3)
+                //pop new
+                OSTCBCur = OSTCBHighRdy;                        F3.7(1)
+                SP = OSTCBHighRdy->OSTCBStkPtr;                 F3.7(2)
+                POP R4,R3,R2 and R1 from the new stack          F3.7(3)
+                //start
+                execute a return from interrupt instructions    F3.7(4)
+             
+            } 
+             
+             
+            */
         }
     }
     OS_EXIT_CRITICAL();
@@ -907,7 +979,7 @@ void  OS_Sched (void)
 *                 power.
 *********************************************************************************************************
 */
-
+//this task is always set to OS_LOWEST_PRIO
 void  OS_TaskIdle (void *pdata)
 {
 #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
@@ -918,8 +990,12 @@ void  OS_TaskIdle (void *pdata)
     pdata = pdata;                               /* Prevent compiler warning for not using 'pdata'     */
     for (;;) {
         OS_ENTER_CRITICAL();
+        //this is used by the stat task to determine the percentage of CPU time actually being
+        //consumed by application software
         OSIdleCtr++;
         OS_EXIT_CRITICAL();
+        //you can use OSTaskIdleHook to stop the CPU so that it can enter low-power mode
+        //Idle task MUST ALWAYS be ready to run, so don't call one of the PEND functions
         OSTaskIdleHook();                        /* Call user definable HOOK                           */
     }
 }
@@ -951,6 +1027,32 @@ void  OS_TaskIdle (void *pdata)
 */
 
 #if OS_TASK_STAT_EN > 0
+//when enabled, this task executes every second and computes the percentage of CPU usage
+//you must call OSStatInit() from the first and only task created in your application during initialization
+//in other words, your startup code must create only one task before calling OSStart,
+//that single task you created is allowed to create other tasks, but only after calling OSStatInit()
+//listing 3.15 initializing the statistic task, pseudocode for main()
+/* 
+//Figure 3.9 
+void main(void) 
+{ 
+    OSInit(); //init UCOSII
+    //to do install USOCII context switch vector
+    //to do craete your startup tasks like TaskStart(), by calling either OSTaskCraete or OSTaskCreateExt
+    OSStart();  //start multitasking
+} 
+ 
+void TaskStart(void *pdata) 
+{ 
+    //install and init UCOSII ticker
+    OSStatInit();
+    for (;;)        // create your application tasks
+    {
+        //code for TaskStart() goes here
+    }
+} 
+ 
+*/ 
 void  OS_TaskStat (void *pdata)
 {
 #if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
