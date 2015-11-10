@@ -151,6 +151,35 @@ void  OSInit (void)
     OSInitHookEnd();                                             /* Call port specific init. code            */
 #endif
 }
+
+
+/*
+//listing 3.18 ISRs under UCOSII 
+ 
+Your ISR: 
+    Save all CPU register;
+    //OS needs to know you're serving an IRQ
+    call OSIntEnter() or, increment OSIntNesting directly;
+    //check if this is the 1st interrupt serviced
+    if(OSIntNesting == 1)
+        OSTCBCur->OSTCBStkPtr = SP;
+    //you must clear the interrupt source becasue you stand the chance of re-entering the ISR
+    //if you decided to re-enable ISR
+    Clear interrupting device;
+    Re-enable interrupts (optional)
+    //application specific
+    Execute user code to service ISR;
+    //this decrements the interrupt nesting counter. when the counter reaches 0
+    //all nested interrupts are complete, and UCOSII needs to determine whether a higher priority task has been
+    //awakened by the ISR or any other nested ISR. If a higher priority task is ready to run,
+    //UCOSII returns to the higher priority task rather than to the interrupted task
+    Call OSIntExit();
+    //if the ISR task is still the most important task to run, OSIntExit() returns to the ISR
+    Restore all CPU registers;
+    //at this point, the saved registers are restored, and a return from interrupt instruction is excuted.
+    //note that UCOS returns to the interrupted task if scheduling has been disabled (OSLockNesting > 0)
+    Execute a return from interrupt instruction;
+*/
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -416,6 +445,7 @@ void  OSTimeTick (void)
     OSTimeTickHook();                                      /* Call user definable hook                 */
 #if OS_TIME_GET_SET_EN > 0   
     OS_ENTER_CRITICAL();                                   /* Update the 32-bit tick counter           */
+    //accumulates the nunmber of clock ticks since power up
     OSTime++;
     OS_EXIT_CRITICAL();
 #endif
@@ -424,6 +454,8 @@ void  OSTimeTick (void)
         while (ptcb->OSTCBPrio != OS_IDLE_PRIO) {          /* Go through all TCBs in TCB list          */
             OS_ENTER_CRITICAL();
             if (ptcb->OSTCBDly != 0) {                     /* Delayed or waiting for event with TO     */
+                //when the .OSTCBDly field of a task's OS_TCB is decremented to 0,
+                //the task is made ready to run
                 if (--ptcb->OSTCBDly == 0) {               /* Decrement nbr of ticks to end of delay   */
                     if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) == OS_STAT_RDY) { /* Is task suspended?    */
                         OSRdyGrp               |= ptcb->OSTCBBitY; /* No,  Make task R-to-R (timed out)*/
