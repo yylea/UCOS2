@@ -10,7 +10,7 @@
 *********************************************************************************************************
 */
 
-#include "includes.h"
+#include "../SOURCE/INCLUDES.H"
 
 /*
 *********************************************************************************************************
@@ -72,6 +72,7 @@ void  main (void)
     OSStart();                                             /* Start multitasking                       */
 
     //no return in embedded system main function, nowhere return to
+    return 0;
 }
 
 

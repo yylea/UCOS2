@@ -13,7 +13,7 @@
 */
 
 #ifndef  OS_MASTER_FILE
-#include "includes.h"
+#include "INCLUDES.H"
 #endif
 
 #if OS_MBOX_EN > 0

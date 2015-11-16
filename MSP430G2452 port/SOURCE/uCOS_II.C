@@ -12,7 +12,7 @@
 */
 
 #define  OS_GLOBALS                           /* Declare GLOBAL variables                              */
-#include "includes.h"
+#include "INCLUDES.H"
 
 
 #define  OS_MASTER_FILE                       /* Prevent the following files from including includes.h */

@@ -14,11 +14,10 @@
 #include    <string.h>
 #include    <ctype.h>
 #include    <stdlib.h>
-#include    <conio.h>
-#include    <dos.h>
 #include    <setjmp.h>
+#include    <msp430.h>
 
-#include    "\software\ucos-ii\ix86l\bc45\os_cpu.h"
-#include    "os_cfg.h"
-#include    "\software\ucos-ii\source\ucos_ii.h"
-#include    "\software\blocks\pc\bc45\pc.h"
+
+#include    "..\MSP430\os_cpu.h"
+#include    "..\APP\os_cfg.h"
+#include    "..\source\ucos_ii.h"
