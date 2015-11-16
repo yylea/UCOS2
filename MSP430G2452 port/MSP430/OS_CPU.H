@@ -67,18 +67,25 @@ typedef unsigned short OS_CPU_SR;                /* Define size of CPU status re
 *             into the CPU's status register.
 *********************************************************************************************************
 */
-#define  OS_CRITICAL_METHOD    2
+//use simple solutions first
+#define  OS_CRITICAL_METHOD    1
 
 #if      OS_CRITICAL_METHOD == 1
-#define  OS_ENTER_CRITICAL()  asm  CLI                    /* Disable interrupts                        */
-#define  OS_EXIT_CRITICAL()   asm  STI                    /* Enable  interrupts                        */
+//asm way to disable/enable interrupts
+//#define  OS_ENTER_CRITICAL()  __asm__ ("DINT");                    /* Disable interrupts                        */
+//#define  OS_EXIT_CRITICAL()   __asm__ ("EINT");                    /* Enable  interrupts                        */
+//one of API ways to disable/enable interrupts
+//in C:\ti\ccsv6\ccs_base\msp430\include_gcc\in430.h
+#define  OS_ENTER_CRITICAL()  __bic_SR_register(GIE);                /* Disable interrupts                        */
+#define  OS_EXIT_CRITICAL()   __bis_SR_register(GIE);                /* Enable  interrupts                        */
 #endif
 
+//TODO
 #if      OS_CRITICAL_METHOD == 2
 #define  OS_ENTER_CRITICAL()  asm {PUSHF; CLI}            /* Disable interrupts                        */
 #define  OS_EXIT_CRITICAL()   asm  POPF                   /* Enable  interrupts                        */
 #endif
-
+//TODO
 #if      OS_CRITICAL_METHOD == 3
 #define  OS_ENTER_CRITICAL()  (cpu_sr = OSCPUSaveSR())    /* Disable interrupts                        */
 #define  OS_EXIT_CRITICAL()   (OSCPURestoreSR(cpu_sr))    /* Enable  interrupts                        */
@@ -90,11 +97,15 @@ typedef unsigned short OS_CPU_SR;                /* Define size of CPU status re
 *********************************************************************************************************
 */
 
+//stack grows downward
 #define  OS_STK_GROWTH        1                       /* Stack grows from HIGH to LOW memory on 80x86  */
 
-#define  uCOS                 0x80                    /* Interrupt vector # used for context switch    */
+//#define  uCOS                 0x80                    /* Interrupt vector # used for context switch    */
 
-#define  OS_TASK_SW()         asm  INT   uCOS
+//#define  OS_TASK_SW()         asm  INT   uCOS
+//vector directly to OSCtxSw() function
+//TODO: to be implemented in OS_CPU_A.ASM
+#define  OS_TASK_SW()         OSCtxSw();
 
 /*
 *********************************************************************************************************

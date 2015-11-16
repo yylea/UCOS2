@@ -44,7 +44,6 @@ OS_EVENT     *RandomSem;
 
         void  Task(void *data);                       /* Function prototypes of tasks                  */
         void  TaskStart(void *data);                  /* Function prototypes of Startup task           */
-static  void  TaskStartCreateTasks(void);
 
 /*$PAGE*/
 /*
@@ -53,7 +52,7 @@ static  void  TaskStartCreateTasks(void);
 *********************************************************************************************************
 */
 
-void  main (void)
+int main (void)
 {
     //must have before in voke any other services
     //it creates two tasks: an idle task whcih excutes when no other task is ready to run
@@ -88,8 +87,6 @@ void  TaskStart (void *pdata)
 #if OS_CRITICAL_METHOD == 3                                /* Allocate storage for CPU status register */
     OS_CPU_SR  cpu_sr;
 #endif
-    char       s[100];
-    INT16S     key;
 
     //fake usage of pdata
     pdata = pdata;                                         /* Prevent compiler warning                 */
